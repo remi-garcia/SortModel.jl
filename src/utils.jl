@@ -18,62 +18,66 @@ end
 
 
 import JuMP.add_constraint
-function add_constraint(model::Model, set::MOI.LessThan, expr::AffExpr)
+function add_constraint(model::Model, set::MOI.LessThan, expr::AffExpr; kwargs...)
     @constraint(model, expr <= set.upper)
     return nothing
 end
 
-function add_constraint(model::Model, set::MOI.GreaterThan, expr::AffExpr)
-    @constraint(model, expr >= set.lower)
+function add_constraint(model::Model, set::MOI.GreaterThan, expr::AffExpr; to_LessThan::Bool=false)
+    if !to_LessThan
+        @constraint(model, expr >= set.lower)
+    else
+        @constraint(model, -expr <= -set.lower)
+    end
     return nothing
 end
 
-function add_constraint(model::Model, set::MOI.EqualTo, expr::AffExpr)
+function add_constraint(model::Model, set::MOI.EqualTo, expr::AffExpr; kwargs...)
     @constraint(model, expr == set.value)
     return nothing
 end
 
-function add_constraint(model::Model, set::MOI.Interval, expr::AffExpr)
+function add_constraint(model::Model, set::MOI.Interval, expr::AffExpr; kwargs...)
     @constraint(model, expr >= set.lower)
     @constraint(model, expr <= set.upper)
     return nothing
 end
 
 # Do not change the index
-function add_constraint(model::Model, set::MOI.LessThan, expr::VariableRef)
+function add_constraint(model::Model, set::MOI.LessThan, expr::VariableRef; kwargs...)
     set_upper_bound(expr, set.upper)
     return nothing
 end
-function add_constraint(model::Model, set::MOI.GreaterThan, expr::VariableRef)
+function add_constraint(model::Model, set::MOI.GreaterThan, expr::VariableRef; kwargs...)
     set_lower_bound(expr, set.lower)
     return nothing
 end
-function add_constraint(model::Model, set::MOI.EqualTo, expr::VariableRef)
+function add_constraint(model::Model, set::MOI.EqualTo, expr::VariableRef; kwargs...)
     fix(expr, set.value)
     return nothing
 end
-function add_constraint(model::Model, set::MOI.Interval, expr::VariableRef)
+function add_constraint(model::Model, set::MOI.Interval, expr::VariableRef; kwargs...)
     set_upper_bound(expr, set.upper)
     set_lower_bound(expr, set.lower)
     return nothing
 end
 
 # Not used yet
-function add_constraint(::Model, ::MOI.ZeroOne, expr::VariableRef)
+function add_constraint(::Model, ::MOI.ZeroOne, expr::VariableRef; kwargs...)
     set_binary(expr)
     return nothing
 end
-function add_constraint(::Model, ::MOI.Integer, expr::VariableRef)
+function add_constraint(::Model, ::MOI.Integer, expr::VariableRef; kwargs...)
     set_integer(expr)
     return nothing
 end
 
 
-function copy_constraint_at_the_end(model::Model, constraint::ConstraintRef)
+function copy_constraint_at_the_end(model::Model, constraint::ConstraintRef; to_LessThan::Bool=false)
     expr = @expression(model, reshape_vector(jump_function(constraint_object(constraint)), shape(constraint_object(constraint))))
     set = reshape_set(moi_set(constraint_object(constraint)), shape(constraint_object(constraint)))
     delete(model, constraint)
-    add_constraint(model, set, expr)
+    add_constraint(model, set, expr, to_LessThan=to_LessThan)
     return nothing
 end
 

@@ -3,7 +3,9 @@ function sort!(model::Model;
                more_variables_first::Bool=false,
                bin_variables_first::Bool=false,
                integer_variables_first::Bool=false,
-               continuous_variables_first::Bool=false)
+               continuous_variables_first::Bool=false,
+               merge_inequalities::Bool=false,
+    )
     #
     constraints = all_constraints_affexpr(model) #AffExpr
     if !less_variables_first && !more_variables_first && !bin_variables_first &&
@@ -20,7 +22,7 @@ function sort!(model::Model;
     end
 
     for constraint in constraints
-        copy_constraint_at_the_end(model, constraint)
+        copy_constraint_at_the_end(model, constraint, to_LessThan=merge_inequalities)
     end
 
     return model
