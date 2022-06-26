@@ -32,7 +32,7 @@ function main()
         #set_optimizer_attributes(model, "CPXPARAM_Threads" => 4)
 
         #set_silent(model)
-        set_time_limit_sec(model, 1800)
+        set_time_limit_sec(model, 600)
         set_model!(model, C, verbose=true)
 
         sortname = "rand1"
@@ -55,7 +55,7 @@ function main()
     open("$(@__DIR__)/results.csv", "r") do file
         lines = strip.(readlines(file))
         time_results = Dict{String, String}()
-        open("$(@__DIR__)/newresults.txt", "r") do readresultsfile
+        open("$(@__DIR__)/newresults_$(sortname).txt", "r") do readresultsfile
             resultlines = readlines(readresultsfile)
             for line in resultlines[1:end]
                 line_data = strip.(split(line, ","))
@@ -70,7 +70,7 @@ function main()
         end
     end
     mv("$(@__DIR__)/newresults.csv", "$(@__DIR__)/results.csv", force=true)
-    rm("$(@__DIR__)/newresults.txt")
+    rm("$(@__DIR__)/newresults_$(sortname).txt")
 
     return nothing
 end
